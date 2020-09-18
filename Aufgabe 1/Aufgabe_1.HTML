@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+<title>Aufgabe 1</title>
+<header>
+<h1 id='header'>Die Erste Aufgabe</h1>
+</header>
+<style>
+header {
+text-align: center;
+}
+</style>
+<script src="http://code.jquery.com/jquery-3.5.0.js"></script>
+<h2 id='header'>Wörterbuch Methode 1a</h2>
+<button  id='method_1a'>Passwort 1a generieren</button><a id='method_1a_password'> </a>
+<p id='method_1b_text'><ul id="myUL">
+  <li>Schritt 1: Von 2 bis 3 Wörter züfällig von der Wortbasis entnehmen</li>
+  <li>Schritt 2: Jedes a,o,i,s mit einer Warscheinlichkeit von 50% zu @,0,1,$ ersetzen</li>
+</ul></p>
+<h2 id='header'>Wörterbuch Methode 1b</h2>
+<button  id='method_1b'>Passwort 1b generieren</button><a id='method_1b_password'> </a>
+<p id='method_1b_text'><ul id="myUL">
+  <li>Schritt 1: 2 Wörter züfällig von der Wortbasis entnehmen</li>
+  <li>Schritt 2: Wahlen zusammen verbinden mit zufälligen Zahlen von 1 bis 99 (z.b. car77mouse)</li>
+</ul></p>
+<h2 id='header'>Graphische Zeichen, Methode 2</h2><canvas id="canvas" width="360" height="121"></canvas><br>
+<button  id='method_2'>Passwort 2 generieren</button><a id='method_2_password'> </a>
+<p id='method_2_text'><ul id="myUL">
+  <li>Schritt 1: Zufälliger Weise ein Buchstabe herausfinden wo man Anfängt</li>
+  <li>Schritt 2: zufälliger weise ein nachbar von diesem buchstaben herausfinden</li>
+  <li>Schritt 3: Schritt 2 8mal Wiederholen</li>
+</ul></p>
+<h2 id='header'>Erfundene Wörter, Methode 3</h2>
+<button  id='method_3'>Passwort 3 generieren</button><a id='method_3_password'> </a>
+<p id= 'method_3_text'><ul id="myUL">
+  <li>Schritt 1: Die länge von für erfundene wörter zufällig auswählen</li>
+  <li>Schritt 2: Wort Erfinden nach dem Prinzip: ein Vokal, ein konsonant, ein Vokal , ein konsonant</li>
+  <li>Schritt 3: Passwort zusammen stellen : Ein erfundenes Wort , eine Zahl von 1 bis 10</li>
+</ul></p>
+<script>
+method_1a.style.width = "100px";
+method_1a.style.height = "50px";
+method_1b.style.width = "100px";
+method_1b.style.height = "50px";
+method_2.style.width = "100px";
+method_2.style.height = "50px";
+method_3.style.width = "100px";
+method_3.style.height = "50px";
+$("#method_1a").click(function(){
+       $("#method_1a_password").text(" " + getRandomPassword1a());
+    });
+$("#method_1b").click(function(){
+       $("#method_1b_password").text(" " +getRandomPassword1b());
+    });
+$("#method_2").click(function(){
+       $("#method_2_password").text(" " +Password2());
+    });
+$("#method_3").click(function(){
+       $("#method_3_password").text(" " + getRandomPassword3());
+    });
+
+
+var passwort2 =  1
+
+/* ===============================================================================================
+   ====================================  Method 1a   ==============================================
+   =============================================================================================== */	
+var changeableLetters = {
+"a": "@",
+"o": 0,
+"i": 1,
+"s": "$"
+} 
+var randomWordFromInternet = function (){
+	var wordArray = ""
+	var r = new XMLHttpRequest();
+	r.open('GET', 'https://random-word-api.herokuapp.com/word?number=1000', false );
+	r.send(null);
+	if (r.status === 200) {
+		wordArray = JSON.parse(r.responseText);
+	}
+	return wordArray;
+}
+
+var changeWord = function (WordFromInternet){
+	var changedWord = ""
+	for (i = 0;i < WordFromInternet.length ;i++){
+	console.log(WordFromInternet)
+		var letter = WordFromInternet.charAt(i);
+		var changedLetter = changeableLetters[letter];
+		if (changedLetter !== undefined){
+			if (Math.round(Math.random()) > 0){
+				changedWord += letter
+			}else{
+				changedWord += changeableLetters[letter];
+			}
+		}else{
+			changedWord += letter;
+		}
+	}
+	return changedWord;
+}
+
+var getRandomPassword1a = function (){
+	var resultPassword1a = "";
+	var wordArray = randomWordFromInternet();
+	console.log(wordArray[i])
+	for (var i = 0;i < wordArray.length;i++){
+		resultPassword1a += changeWord(wordArray[i]);
+		if (resultPassword1a.length >= 8){
+			break;
+		}
+	}
+	return resultPassword1a;
+}
+
+
+/* ===============================================================================================
+   ====================================  Method 1b   ==============================================
+   =============================================================================================== */	
+   
+var random3LetterWord = function() {
+	var Word3Letter = "";
+	var wordArray = randomWordFromInternet();
+	for (var i = 0;i < wordArray.length;i++){
+		var wordFromArray = wordArray[i];
+		if (wordFromArray.length <= 4){
+			Word3Letter += wordFromArray;
+			break;
+		}
+	}
+	return Word3Letter;
+}
+
+
+var getRandomPassword1b = function () {
+	var resultPassword1b = "";
+	resultPassword1b += random3LetterWord();
+	resultPassword1b += Math.floor(Math.random() * 99);
+	resultPassword1b += random3LetterWord();
+	return resultPassword1b;
+};
+	
+	
+
+   
+/* ===============================================================================================
+   ====================================  Method 2   ==============================================
+   =============================================================================================== */
+   
+var blockSize = 30;
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+var distance = 2;
+var keyBoardLetters = [
+	["1","2","3","4","5","6","7","8","9","0"],
+	["q","w","e","r","t","y","u","i","o","p"],
+	["a","s","d","f","g","h","j","k","l",";"],
+	["z","x","c","v","b","n","m",",",".","/"]
+];
+
+ //Blocks
+var KeyBlock = function(letter, col, row){
+this.col = col;
+this.row = row;
+this.letter = letter;
+};
+
+
+//drawSquare
+KeyBlock.prototype.draw = function(color){
+	var x = this.col * blockSize + (this.row * 10) + distance;
+	var y = this.row * blockSize + distance;
+	var squareLength = blockSize - distance * 2;
+	ctx.lineWidth = "1";
+	ctx.fillStyle = color;
+	ctx.fillRect(x ,y ,squareLength,squareLength);
+	ctx.strokeRect(x ,y ,squareLength,squareLength);
+	ctx.fillStyle = "Black"
+	ctx.font = "20px Courier ";
+	ctx.fillText(this.letter,x + 7,y + 19);
+};
+var drawKeyBoard = function (){
+	for (var i = 0;i < 10;i++){
+		for (var j = 0 ;j < 4;j++){
+			var drawKey = new KeyBlock(keyBoardLetters[j][i],i,j)
+			drawKey.draw("White")
+		}
+	}
+}
+drawKeyBoard();
+var colorPallet = ["Red","Blue","Green","Yellow"]
+var passwordLetters = [];
+var usedLetters = [];
+var drawPasswordLetters = function(){
+	if(passwordLetters.length > 0){
+		var colorID = 0;
+		var key = passwordLetters.shift();
+		for (var k = 0;k < usedLetters.length;k++){
+			if (usedLetters[k] === key.letter){
+				colorID++;
+			}
+		}
+		var color = colorPallet[colorID];
+		usedLetters.push(key.letter);
+		key.draw(color);
+		} else {
+			clearInterval(intrvalId);
+			usedLetters = [];
+		}
+	
+}
+var intrvalId = 0;
+var Password2 = function(){
+	clearInterval(intrvalId);
+	usedLetters = [];
+	drawKeyBoard();
+	var resultPassword2 = "";
+	var randomcol = Math.round(Math.random() *9)
+	var randomrow = Math.round(Math.random() * 3)
+	for (i = 0;i < 8; i++){
+		var randomKeyColDistance;
+		var randomKeyRowDistance;
+		if (randomcol === 9){
+			randomKeyColDistance = Math.round(Math.random() -1)
+		}else if (randomcol === 0){
+			randomKeyColDistance = Math.round(Math.random())
+		}else{
+			 randomKeyColDistance = Math.round(Math.random()*2 -1)
+		}
+		if (randomrow === 3){
+			randomKeyRowDistance = Math.round(Math.random() -1)
+		}else if (randomrow === 0){
+			randomKeyRowDistance = Math.round(Math.random())
+		}else{
+			 randomKeyRowDistance = Math.round(Math.random()*2 -1) 	
+		}
+		if (randomKeyRowDistance === 0 && randomKeyColDistance === 0){
+			i--;	
+			continue;
+		}
+		console.log(randomKeyRowDistance)
+		console.log(randomKeyColDistance)
+		randomrow += randomKeyRowDistance;
+		randomcol += randomKeyColDistance;
+		console.log("row: " + randomrow + " col: " + randomcol);
+		passwordLetters.push( new KeyBlock(keyBoardLetters[randomrow][randomcol],randomcol,randomrow));	
+		resultPassword2 += keyBoardLetters[randomrow][randomcol]
+	
+	};
+	intrvalId = setInterval(drawPasswordLetters, 500);
+	return resultPassword2;
+};
+/* ===============================================================================================
+   ====================================  Method 3   ==============================================
+   =============================================================================================== */	
+
+var vokale = [
+"a",
+"e",
+"i",
+"o",
+"y",
+"u"];
+
+var konsonante = [
+"q",
+"w",
+"r",
+"t",
+"z",
+"p",
+"s",
+"d",
+"f",
+"g",
+"h",
+"j",
+"k",
+"l",
+"x",
+"c",
+"v",
+"b",
+"n",
+"m"];
+var vokal = function(){
+	var randomVokal = "";
+	var randomVokalNumber = Math.ceil(Math.random() * vokale.length - 1);
+	randomVokal = vokale[randomVokalNumber];
+	return randomVokal;
+};
+var konsonant = function(){
+	var randomKonsonant = "";
+	var randomKonsonantNumber = Math.ceil(Math.random() * konsonante.length -1);
+	randomKonsonant = konsonante[randomKonsonantNumber];
+	return randomKonsonant;
+};
+var randomWord = function(){
+	var word = "";
+	var randomNumberOfLetters = Math.round(Math.random() + 2);
+	for (i = 0;i < randomNumberOfLetters;i++){
+		word += konsonant();
+		word += vokal();
+	}
+	console.log(word)
+	return word;
+}
+
+var getRandomPassword3 = function(){
+	var password3 = "";
+	password3 += randomWord();
+	password3 += Math.round(Math.random() * 10);
+	return password3;
+}
+
+
+	
+
+</script>
+</body>
+</html>
