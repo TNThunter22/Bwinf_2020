@@ -74,16 +74,21 @@ var changeableLetters = {
 "i": 1,
 "s": "$"
 } 
-var randomWordFromInternet = function (){
-	var wordArray = ""
-	var r = new XMLHttpRequest();
-	r.open('GET', 'https://random-word-api.herokuapp.com/word?number=1000', false );
-	r.send(null);
-	if (r.status === 200) {
-		wordArray = JSON.parse(r.responseText);
+
+
+var getRandomPassword1a = function (){
+	var resultPassword1a = "";
+	var wordArray = randomWordFromInternet();
+	console.log(wordArray[i])
+	for (var i = 0;i < wordArray.length;i++){
+		resultPassword1a += changeWord(wordArray[i]);
+		if (resultPassword1a.length >= 8){
+			break;
+		}
 	}
-	return wordArray;
+	return resultPassword1a;
 }
+
 
 var changeWord = function (WordFromInternet){
 	var changedWord = ""
@@ -104,19 +109,17 @@ var changeWord = function (WordFromInternet){
 	return changedWord;
 }
 
-var getRandomPassword1a = function (){
-	var resultPassword1a = "";
-	var wordArray = randomWordFromInternet();
-	console.log(wordArray[i])
-	for (var i = 0;i < wordArray.length;i++){
-		resultPassword1a += changeWord(wordArray[i]);
-		if (resultPassword1a.length >= 8){
-			break;
-		}
-	}
-	return resultPassword1a;
-}
 
+var randomWordFromInternet = function (){
+	var wordArray = ""
+	var r = new XMLHttpRequest();
+	r.open('GET', 'https://random-word-api.herokuapp.com/word?number=1000', false );
+	r.send(null);
+	if (r.status === 200) {
+		wordArray = JSON.parse(r.responseText);
+	}
+	return wordArray;
+}
 
 /* ===============================================================================================
    ====================================  Method 1b   ==============================================
@@ -313,7 +316,7 @@ var randomWord = function(){
 var getRandomPassword3 = function(){
 	var password3 = "";
 	password3 += randomWord();
-	password3 += Math.round(Math.random() * 10);
+	password3 += Math.round(Math.random() * 99);
 	return password3;
 }
 
