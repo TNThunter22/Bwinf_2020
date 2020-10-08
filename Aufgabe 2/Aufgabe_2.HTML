@@ -14,7 +14,6 @@
 /*===============================================================================================================
   =============================================== Setup =========================================================
   ===============================================================================================================*/
-var count = 0;
 var blockSize = 10;
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
@@ -40,24 +39,24 @@ document.querySelector("#read-button").addEventListener('click', function() {
 		alert('Error : No file selected');
 		return;
 	}
-	count = 0;
-	ctx.fillStyle = "White"
-	ctx.fillRect(0,0,width,height)
+	var count = 0;
+	ctx.fillStyle = "White";
+	ctx.fillRect(0,0,width,height);
 	var file = document.querySelector("#file-input").files[0];
 	var reader = new FileReader();
 	reader.addEventListener('load', function(e) {
 	    input = [];
 	    var text = e.target.result;
-		var lines = this.result.split('\n')
+		var lines = this.result.split('\n');
 		var colummcount = lines[0];
 		var linecount = lines[1];
 		for (var line = 0;line < linecount;line++){
 			input[line] = [];
 			for (columm = 0;columm < colummcount ;columm++){
 				input[line][columm] = lines[line + 2].charAt(columm);
-				var patternBlocks = new Block(line,columm)
+				var patternBlocks = new Block(line,columm);
 				if(input[line][columm] === "X"){
-				patternBlocks.draw("Black");
+					patternBlocks.draw("Black");
 				}
 			}
 		}
@@ -67,7 +66,20 @@ document.querySelector("#read-button").addEventListener('click', function() {
 	
 });
 
-
+var findx = function (){
+	for (var k = 0;k < input.length - 3;k++){
+		for (var l = 0;l < input[k].length - 2;l++){
+			if(input[k][l] === "X"){
+				if (checker(k,l)){
+					count++;
+					drawPattern(k,l);
+					clear(k,l);
+				}
+			}
+		}
+	}
+return count;
+}
 
 
 var checker = function(xPos,yPos) {
@@ -80,6 +92,40 @@ var checker = function(xPos,yPos) {
 	}
 return true;
 }
+
+
+
+
+var clear = function(xPos,yPos) {
+	for (var i = 0;i < searchedpattern.length;i++){
+		for (var j = 0;j < searchedpattern[i].length;j++){
+			input[xPos + i][yPos + j] = " ";
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 var drawPattern = function (yPos, xPos){
@@ -98,53 +144,6 @@ var drawPattern = function (yPos, xPos){
 		}
 	}		
 }
-
-var clear = function(xPos,yPos) {
-	for (var i = 0;i < searchedpattern.length;i++){
-		for (var j = 0;j < searchedpattern[i].length;j++){
-			input[xPos + i][yPos + j] = " "
-		}
-	}
-}
-
-
-var findx = function (){
-	for (var k = 0;k < input.length - 3;k++){
-		for (var l = 0;l < input[k].length - 2;l++){
-			if(input[k][l] === "X"){
-				if (checker(k,l)){
-					count++;
-					drawPattern(k,l)
-					clear(k,l)
-				}
-			}
-		}
-	}
-return count;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 var Block = function(col, row){

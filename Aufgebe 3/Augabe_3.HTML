@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Aufgabe 3</title>
+</head>
+<body>
+<script src="http://code.jquery.com/jquery-3.5.0.js"></script>
+<h1 id= "heading">Aufgabe 3</h1>
+<input type="file" id="file-input" />
+<button id="read-button">Read File</button><a id= 'numberOfPatterns'></a><br>
+<h2 id ="input">Input Text</h2>
+<h3>1)</h3><h3 id ="line1"></h3>
+<h3>2)</h3><h3 id ="line2"></h3><br>
+<h2 id ="output">Result</h2>
+<h3 id ="result">hhhhhhhhhhhh</h3><br>
+<script>
+	var countOfWordsFound = 0;
+
+document.querySelector("#read-button").addEventListener('click', function() {
+	if(document.querySelector("#file-input").files.length == 0) {
+		alert('Error : No file selected');
+		return;
+	}
+	var count = 0;	
+	var file = document.querySelector("#file-input").files[0];
+	var reader = new FileReader();
+	reader.addEventListener('load', function(e) {
+	    var text = e.target.result;
+		var lines = this.result.split('\n');
+		var missingText = lines[0].split(/[^A-Za-zÜüÖöÄä_]/);
+		var fillWords = lines[1].split(/[^A-Za-zÜüÖöÄä]/);
+		missingText = missingText.filter(Boolean)
+		$("#line1").text("	" + lines[0]);
+		$("#line2").text("	" + lines[1]);
+		$("#result").text(" " + checker(missingText,fillWords,lines[0]));
+	});
+	reader.readAsText(file);
+	
+});
+
+var clearCheckTable = function(checktable,row,col){
+	for(var o = 0  ;o < checktable.length;o++){
+		checktable[row][o] = 0;
+		checktable[o][col] = 0;
+	}
+}
+
+var checkerLines = function(checktable,foundWords,fillWords){
+	for(var i = 0;i < checktable.length;i++){
+		var countOfPossibilities = 0;
+		var foundindex = 0;
+		for(var j = 0;j < checktable[i].length;j++){
+			if(checktable[i][j] === 1){
+				foundIndex = j;
+				countOfPossibilities++;
+			}
+		}
+		if (countOfPossibilities === 1){
+			foundWords[i] = fillWords[foundIndex];
+			countOfWordsFound++;
+			clearCheckTable(checktable,i,foundIndex);
+		}
+	}
+}
+
+var checkerColumms = function(checktable,foundWords,fillWords){
+	for(var i = 0;i < checktable.length;i++){
+		var countOfPossibilities = 0;
+		var foundindex = 0;
+		for(var j = 0;j < checktable[i].length;j++){
+			if(checktable[j][i] === 1){
+				foundIndex = j;
+				countOfPossibilities++;
+			}
+				
+		}
+		if (countOfPossibilities === 1){
+			foundWords[foundIndex] = fillWords[i]
+			countOfWordsFound++;
+			clearCheckTable(checktable,foundIndex,i);
+		}
+	}
+}
+
+var checkerDupes = function(checktable,foundWords,fillWords){
+	for(var i = 0;i < checktable.length;i++){
+		foundIndex = -1;
+		for(var j = 0;j < checktable[i].length;j++){
+			if(checktable[i][j] === 1){
+				foundIndex = j;
+				break;
+			}
+				
+		}
+		if (foundIndex > -1){
+			foundWords[i] = fillWords[foundIndex]
+			clearCheckTable(checktable,i,foundIndex);
+		}
+	}	
+}
+
+var checker = function(missingText,fillWords,output){
+	var checktable = countChecker(fillWords,missingText);	
+	var allWordcount = fillWords.length;
+	 countOfWordsFound = 0;
+	var iterations = 0;
+	foundWords = [];
+	while(allWordcount > countOfWordsFound && iterations++ < allWordcount * 10){	
+		checkerLines(checktable,foundWords,fillWords);
+		checkerColumms(checktable,foundWords,fillWords);
+
+	}
+	checkerDupes(checktable,foundWords,fillWords);
+	for(var i = 0;i < fillWords.length;i++){
+		output = output.replace(missingText[i],foundWords[i]);
+	}
+	return output;
+}
+
+
+
+var countChecker = function(fillWords,missingText){
+	var checktable = [];
+	for(var i = 0;i < missingText.length;i++){
+		checktable[i] = [];
+		loopFillWords:
+		for(var j = 0;j < fillWords.length;j++){
+			checktable[i][j] = 1;
+			if(missingText[i].length === fillWords[j].length){
+				for(var h = 0;h < missingText[i].length;h++){
+					if(missingText[i].charAt(h) === "_"){
+						continue;
+					}else if(missingText[i].charAt(h) != fillWords[j].charAt(h)){
+						checktable[i][j] = 0;
+						continue loopFillWords;
+					}
+				}	
+			}else{
+				checktable[i][j] = 0;
+			}
+		}
+	}
+return checktable;
+}
+
+
+
+
+</script>
+</body>
+</html>
