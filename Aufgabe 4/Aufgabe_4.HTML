@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Aufgabe 4</title>
+</head>
+<body>
+<script src="http://code.jquery.com/jquery-3.5.0.js"></script>
+<h1 id= "heading">Aufgabe 4</h1>
+<input type="file" id="file-input" />
+<button id="read-button">Read File</button><a id= 'numberOfPatterns'></a><br>
+<canvas id="canvas" width="10000" height="1000"></canvas><br>
+<script> 
+/*===============================================================================================================
+  =============================================== Setup =========================================================
+  ===============================================================================================================*/
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+var width = canvas.width;
+var height = canvas.height;
+var trianglescount;
+var size = 15;
+var rotationcounter = [0,0,0,0,0,0,0,0,0];
+var triangleList = [];
+var originalTriangles = [];
+var countOfDifferentFigures;
+/*===============================================================================================================
+  =============================================== Programm ======================================================
+  ===============================================================================================================*/
+  /*===============================================================================================================
+  =============================================== Hauptlogik =========================================================
+  ===============================================================================================================*/
+document.querySelector("#read-button").addEventListener('click', function() {
+	if(document.querySelector("#file-input").files.length == 0) {
+		alert('Error : No file selected');
+		return;
+	}
+	var usedTriangles = [];
+	var count = 0;	
+	var file = document.querySelector("#file-input").files[0];
+	var reader = new FileReader();
+	reader.addEventListener('load', function(e) {
+	    var text = e.target.result;
+		var lines = this.result.split('\n');
+		countOfDifferentFigures = Number(lines[0])
+		trianglescount = Number(lines[1])
+		for(var i = 2; i < trianglescount+ 2;i++){
+			var triangleNumbers = lines[i].split(' ');
+			triangleList[i - 2] = new Triangle(triangleNumbers[0],triangleNumbers[1],triangleNumbers[2],i - 2);
+			originalTriangles[i - 2] = new Triangle(triangleNumbers[0],triangleNumbers[1],triangleNumbers[2],i - 2);;
+		}
+		
+		startpuzzle();
+	});
+	reader.readAsText(file);
+	
+});
+
+
+
+var startpuzzle = function(){
+	var i = 0;
+	clearCanvas();
+	drawAllSmallTriangles();
+	do{
+		i++
+		console.log(i)
+		for(var n = 0;n <rotationcounter.length;n++){
+			triangleList[n] = triangleRotator(rotationcounter[n],originalTriangles[n])
+		}
+		var path = pathFinder(0,[]);
+	}while(path.length === 0 && incrementRotationcounter(0))
+	
+	if(path.length === 0){
+		noResultFound();
+	}else{
+		drawResult(path);
+	}
+}
+
+
+
+var pathFinder = function(n,usedTriangles){
+	if(n === 9){
+		return usedTriangles;
+	}
+	var suitableWords = []
+	var unusedTriangles = getUnusedTriangles(usedTriangles);
+	suitableWords = findSuitableTriangles(n,unusedTriangles,usedTriangles);
+	
+	for(var i = 0;i < suitableWords.length;i++){
+		var usedTrianglesForNextStep = getUsedTrianglesForNextStep(usedTriangles,suitableWords[i]);
+		var result =  pathFinder(n + 1,usedTrianglesForNextStep)
+		if (result.length > 0){
+			return result;
+		}
+	}
+	return [];
+}
+/*===============================================================================================================
+  =============================================== Nebenlogic ====================================================
+  ===============================================================================================================*/
+var noResultFound = function(){
+	ctx.fillStyle = "Black"
+		ctx.font = "30px Courier Bold";
+		ctx.fillText("No result found.",200,200)
+}
+
+
+
+var clearCanvas = function(){
+	ctx.fillStyle = "White";
+	ctx.fillRect(0,0,width,height);
+}
+
+
+var incrementRotationcounter = function(index){
+	if (index === 9){
+		return false;
+	}
+	rotationcounter[index]++;
+	if(rotationcounter[index] === 3){
+		rotationcounter[index] = 0;
+		return incrementRotationcounter(index + 1);
+	}
+	return true;
+}
+
+
+
+var triangleRotator = function(n,triangle){
+	var retval = new Triangle(triangle.number1,triangle.number2,triangle.number3,triangle.index);;
+	switch(n){
+		case 1:
+		retval = new Triangle(triangle.number3,triangle.number1,triangle.number2,retval.index,);
+		break;
+		case 2:
+		retval = new Triangle(triangle.number2,triangle.number3,triangle.number1,retval.index);
+	}
+	return retval;
+}
+
+
+
+var Triangle = function(number1,number2,number3,triangleIndex){
+	this.number1 = number1;
+	this.number2 = number2;
+	this.number3 = number3;
+	this.index = triangleIndex;
+}
+
+
+var drawResult = function(path){
+	for(var i = 0;i < path.length;i++){
+		bigTriangle(i,path[i]);
+	}
+}
+
+
+
+var drawSmallTriangle = function(x,y,triangle){
+	ctx.strokeStyle = "Black"
+	ctx.moveTo(x,y + 6 * size);
+	ctx.lineTo(x + 8 * size,y + 6 * size);
+	ctx.lineTo(x + 4 * size,y);
+	ctx.lineTo(x ,y + 6 * size);
+	ctx.stroke();
+	ctx.font = "17px Courier Bold";
+	ctx.fillStyle = "Red"
+	ctx.fillText(triangle.index +1,x + 3.5 *size,y +4.5 *size);
+	ctx.font = "15px Courier"
+	ctx.fillStyle = "Black"
+	ctx.fillText(triangle.number1, x + 2 * size,y + 4 * size)
+	ctx.fillText(triangle.number2, x + 5 * size,y + 4 * size)
+	ctx.fillText(triangle.number3, x + 3.5 * size,y +5.7 * size)
+}
+
+
+
+var invertedSmallTriangle = function(x,y,triangle){
+	ctx.moveTo(x ,y );
+	ctx.lineTo(x + 8 * size,y);
+	ctx.lineTo(x + 4 * size,y + 6 * size);
+	ctx.lineTo(x,y);
+	ctx.stroke();
+	ctx.font = "17px Courier Bold";
+	ctx.fillStyle = "Red"
+	ctx.fillText(triangle.index +1,x + 3.7 *size,y +3 *size);
+	ctx.font = "15px Courier"
+	ctx.fillStyle = "Black"
+	ctx.fillText(triangle.number1, x + 3.5 * size,y + 1.3 * size)
+	ctx.fillText(triangle.number2, x + 5 * size,y + 3 * size)
+	ctx.fillText(triangle.number3, x + 2.5 * size,y + 3 * size)
+}
+
+
+
+var drawAllSmallTriangles = function(){
+	for(var i = 0;i < trianglescount;i++){
+		drawSmallTriangle(i *9 *size,0,triangleList[i])
+	}
+}
+
+
+
+var bigTriangle = function(n,triangle){
+	switch(n){
+		case 0:
+			drawSmallTriangle(12 * size,0 * size + 200,triangle);
+			break;
+		case 1:
+			invertedSmallTriangle(12 * size,8 * size + 200,triangle);
+			break;
+		case 2: 
+			drawSmallTriangle(18 * size,8 * size + 200,triangle);
+			break;
+		case 3:
+			invertedSmallTriangle(18 * size,16 * size + 200,triangle);
+			break;
+		case 4:
+			drawSmallTriangle(24 * size,16 * size + 200,triangle);
+			break;
+		case 5: 
+			drawSmallTriangle(6 * size,8 * size + 200,triangle);
+			break;
+		case 6:
+			invertedSmallTriangle(6 * size, 16 * size + 200,triangle);
+			break;
+		case 7: 
+			drawSmallTriangle(12 * size,16 * size + 200,triangle);
+			break;
+		case 8:
+			drawSmallTriangle(0,16* size + 200,triangle);
+			break;
+	}
+}
+
+
+
+var findSuitableTriangles = function(n,unusedTriangles,usedTriangles){
+	var result = [];
+	for(var i = 0;i < unusedTriangles.length;i++){
+		var checkresult = false;
+		switch(n){
+			case 0: 
+				checkresult = true;
+				break;
+			case 1:
+				if(usedTriangles[0].number3 == -unusedTriangles[i].number1){
+					checkresult = true;
+				}
+				break;
+			case 2:
+				if(usedTriangles[1].number2 == -unusedTriangles[i].number1){
+					checkresult = true;
+				}
+				break;
+			case 3:
+				if(usedTriangles[2].number3 == -unusedTriangles[i].number1){
+					checkresult = true;
+				}
+				break;
+			case 4:
+				if(usedTriangles[3].number2 == -unusedTriangles[i].number1){
+					checkresult = true;
+				}
+				break;
+			case 5:
+				if(usedTriangles[1].number3 == -unusedTriangles[i].number2){
+					checkresult = true;
+				}
+				break;
+			case 6:
+				if(usedTriangles[5].number3 == -unusedTriangles[i].number1){
+					checkresult = true;
+				}
+				break;
+			case 7:
+				if(usedTriangles[6].number2 == -unusedTriangles[i].number1 && usedTriangles[3].number3 == -unusedTriangles[i].number2){
+					checkresult = true;
+				}
+				break;
+			case 8:
+				if(usedTriangles[6].number3 == -unusedTriangles[i].number2){
+					checkresult = true;
+				}
+				break;
+		}
+		if(checkresult === true){
+			result.push(unusedTriangles[i])
+		}
+	}
+	return result;
+}
+
+
+
+var getUnusedTriangles = function(usedTriangles){
+	var unusedTriangles = [];
+	mainLoop:
+	for (i = 0;i < triangleList.length;i++){
+		for (j = 0;j < usedTriangles.length;j++){
+			if(triangleList[i] === usedTriangles[j]){
+				continue mainLoop;
+			}
+		}
+	unusedTriangles[unusedTriangles.length] = triangleList[i];	
+	}
+	return unusedTriangles;
+}
+
+
+
+var getUsedTrianglesForNextStep = function(usedTriangles,suitableWord){
+	var result = []
+	for(i = 0;i < usedTriangles.length;i++){
+		result[i] = usedTriangles[i]
+	}
+	result[result.length] = suitableWord;
+	return result;
+}
+
+</script>
+</body>
+</html>
