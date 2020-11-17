@@ -15,8 +15,13 @@
 <h2 id ="output">Result</h2>
 <h3 id ="result">hhhhhhhhhhhh</h3><br>
 <script>
-	var countOfWordsFound = 0;
-
+/*===============================================================================================================
+  =============================================== Setup =========================================================
+  ===============================================================================================================*/
+var countOfWordsFound = 0;
+/*===============================================================================================================
+  =============================================== Programm ======================================================
+  ===============================================================================================================*/
 document.querySelector("#read-button").addEventListener('click', function() {
 	if(document.querySelector("#file-input").files.length == 0) {
 		alert('Error : No file selected');
@@ -99,27 +104,6 @@ var checkerDupes = function(checktable,foundWords,fillWords){
 		}
 	}	
 }
-
-var checker = function(missingText,fillWords,output){
-	var checktable = countChecker(fillWords,missingText);	
-	var allWordcount = fillWords.length;
-	 countOfWordsFound = 0;
-	var iterations = 0;
-	foundWords = [];
-	while(allWordcount > countOfWordsFound && iterations++ < allWordcount * 10){	
-		checkerLines(checktable,foundWords,fillWords);
-		checkerColumms(checktable,foundWords,fillWords);
-
-	}
-	checkerDupes(checktable,foundWords,fillWords);
-	for(var i = 0;i < fillWords.length;i++){
-		output = output.replace(missingText[i],foundWords[i]);
-	}
-	return output;
-}
-
-
-
 var countChecker = function(fillWords,missingText){
 	var checktable = [];
 	for(var i = 0;i < missingText.length;i++){
@@ -143,6 +127,28 @@ var countChecker = function(fillWords,missingText){
 	}
 return checktable;
 }
+
+var checker = function(missingText,fillWords,output){
+	var checktable = countChecker(fillWords,missingText);	
+	var allWordcount = fillWords.length;
+	 countOfWordsFound = 0;
+	var iterations = 0;
+	foundWords = [];
+	while(allWordcount > countOfWordsFound && iterations++ < allWordcount * 10){	
+		checkerLines(checktable,foundWords,fillWords);
+		checkerColumms(checktable,foundWords,fillWords);
+
+	}
+	checkerDupes(checktable,foundWords,fillWords);
+	for(var i = 0;i < fillWords.length;i++){
+		output = output.replace(missingText[i],foundWords[i]);
+	}
+	return output;
+}
+
+
+
+
 
 
 

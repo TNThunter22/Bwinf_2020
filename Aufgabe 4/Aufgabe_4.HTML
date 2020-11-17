@@ -87,7 +87,6 @@ var pathFinder = function(n,usedTriangles){
 	var suitableWords = []
 	var unusedTriangles = getUnusedTriangles(usedTriangles);
 	suitableWords = findSuitableTriangles(n,unusedTriangles,usedTriangles);
-	
 	for(var i = 0;i < suitableWords.length;i++){
 		var usedTrianglesForNextStep = getUsedTrianglesForNextStep(usedTriangles,suitableWords[i]);
 		var result =  pathFinder(n + 1,usedTrianglesForNextStep)

@@ -1,0 +1,408 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Aufgabe 7</title>
+</head>
+<body>
+<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+<h1 id= "heading">Aufgabe 7</h1>
+<input type="file" id="file-input" />
+<button id="read-button">Read File</button><a id= 'numberOfPatterns'></a><br>
+<h2 id ="output">Result:</h2>
+<h3 id ="result">---</h3><br>
+<script>
+/*===============================================================================================================
+  =============================================== Setup =========================================================
+  ===============================================================================================================*/
+var peoplesWishes = [];
+var originalPeoplesWishes = [];
+var allNumbersOfPresents = [];
+var numbersOfUntakenPresents = [];
+var possiblitiesList = [];
+
+//object von Duplikaten
+var Duplicate = function(wish,indexes){
+	this.wish = wish;
+	this.indexes = indexes;
+}
+
+/*===============================================================================================================
+  =============================================== Programm ======================================================
+  ===============================================================================================================*/
+  
+/*===============================================================================================================
+  =============================================== File Leselogic ================================================
+  ===============================================================================================================*/
+document.querySelector("#read-button").addEventListener('click', function() {
+	if(document.querySelector("#file-input").files.length == 0) {
+		alert('Error : No file selected');
+		return;
+	}
+	var count = 0;	
+	var file = document.querySelector("#file-input").files[0];
+	var reader = new FileReader();
+	reader.addEventListener('load', function(e) {
+	    var text = e.target.result;
+		var lines = this.result.split('\n');
+		var numberOfPresents = lines[0];
+		peoplesWishesList = [];
+		peoplesWishes[0] = [];
+		peoplesWishes[1] = [];
+		peoplesWishes[2] = [];
+		
+		for(var i = 1;i < lines.length - 1;i++){
+			
+			wishes = lines[i].trim().split(' ');
+			wishes = wishes.filter(Boolean);
+			peoplesWishes[0].push(wishes[0]);
+			peoplesWishes[1].push(wishes[1]);
+			peoplesWishes[2].push(wishes[2]);
+		}	
+		originalPeoplesWishes[0] = peoplesWishes[0].slice(0);
+		originalPeoplesWishes[1] = peoplesWishes[1].slice(0);
+		originalPeoplesWishes[2] = peoplesWishes[2].slice(0);
+		for(var i =1;i < numberOfPresents;i++){
+			allNumbersOfPresents[i] = i;
+		}
+		numbersOfUntakenPresents = allNumbersOfPresents;
+		var answer = startSolving();
+		if(answer.length > 0){
+			$("#result").html(generateResultOutput(answer));
+		}else{
+		$("#result").html("No Result Found!");
+		}
+		});
+	reader.readAsText(file);
+});
+/*===============================================================================================================
+  =============================================== Hauptroutine ==================================================
+  ===============================================================================================================*/
+var startSolving = function(){
+	var start = window.performance.now();
+	var duplicates;
+	do {
+		optimisationOfWishes();
+		optimisationOfFullIdenticalWishes();
+		duplicates = checkduplicates(peoplesWishes[0])
+	} while(optimizitionOfDuplicates(duplicates));
+	var template = getTemplate(duplicates,peoplesWishes[0]);
+	var possiblitiesList = [];
+	getAllPossibilitesList(duplicates,template,possiblitiesList);
+	getNextStep(peoplesWishes[1],possiblitiesList);
+	var answer = checkForAnswer(possiblitiesList);
+	if (answer.length > 0){
+		fillZerosWithUnusedGifts(answer);
+		return answer;
+	}
+	var bestpossibility = [];
+	var bestpossibilityzeros = peoplesWishes[0].length;
+	for(var i =0; i <possiblitiesList.length;i++){
+		duplicates = checkduplicates(possiblitiesList[i]);
+		template = getTemplate(duplicates,possiblitiesList[i]);
+		var possiblitiesList2 = [];
+		getAllPossibilitesList(duplicates,template,possiblitiesList2);
+		getNextStep(peoplesWishes[2],possiblitiesList2);
+		for(var k =0;k < possiblitiesList2.length;k++){
+			var possibility = possiblitiesList2[k];
+			var zeroCount = replaceDuplicatesWithZero(possibility);
+			if (zeroCount === 0){
+				console.log(window.performance.now() - start);
+				fillZerosWithUnusedGifts(possibility);
+				return possibility;
+			}else{
+				if(bestpossibilityzeros > zeroCount){
+					bestpossibility = possibility;
+					bestpossibilityzeros = zeroCount;
+				}
+			}
+		}
+		
+		
+	}
+	fillZerosWithUnusedGifts(bestpossibility);
+	console.log(possiblitiesList);
+	console.log(window.performance.now() - start);
+	return bestpossibility;
+}
+
+/*===============================================================================================================
+  =============================================== Nebenlogik ====================================================
+  ===============================================================================================================*/
+
+var countInArray = function (array, what) {
+    return array.filter(item => item == what).length;
+}
+
+//Ersetzt alle duplicate mit 0
+var replaceDuplicatesWithZero = function(array){
+	var zeroCount = 0;
+	for(var i =0;i < array.length;i++){
+		var arrayElement = array[i];
+		if(arrayElement === 0){
+			zeroCount++;
+			continue;
+		}
+		var count = countInArray(array,arrayElement)
+		if(count > 1){
+			for(var j =i;j <array.length ;j++){
+				var otherArrayElement = array[j];
+				if(arrayElement === otherArrayElement){
+					array[j] = 0;
+					zeroCount++;
+				}
+			}
+		}
+	}
+	return zeroCount;
+}
+
+
+//Prüft ob in der Tabelle von Möglichkeiten die entgültige Antwort ist
+var checkForAnswer = function(arrays){
+	var result = [];
+	loop:
+	for(var i =0;i < arrays.length;i++){
+		var array = arrays[i];
+		for(var j =0;j <  array.length;j++){
+			var arrayElement = array[j];
+			if(arrayElement === null){
+				continue;
+			}
+			var count = countInArray(array,arrayElement);
+			if(count > 1 || arrayElement === 0){
+				continue loop;
+			}
+		}
+		result = array;
+	}
+	return result;
+}
+
+
+// Ersetzt 0 Werte mit Wünsche aus nächste Ebene
+var getNextStep = function(peoplesWishesN,possiblitiesList){
+	 possiblitiesListCopy = possiblitiesList.slice(0);
+	for(var i =0 ;i < possiblitiesList.length;i++){
+		var possiblityList = possiblitiesList[i];
+		loop:
+		for(var j =0;j < possiblityList.length;j++){
+			var highLevelWish = possiblityList[j];
+			if(highLevelWish === 0){
+				var currentWish = peoplesWishesN[j];	
+				if(!possiblitiesListCopy[i].includes(currentWish)){
+					possiblityList[j] = currentWish;
+				}
+			}
+		}
+	}
+}
+
+//Ersetzt alle Duplkaten mit 0
+var getTemplate = function(duplicates,template){
+	var templateCopy = template.slice(0);
+	for(var i =0;i < duplicates.length;i++){
+		var duplicate = duplicates[i];
+		for(var j =0;j < duplicate.indexes.length;j++){
+			var duplicateIndex = duplicate.indexes[j];
+			templateCopy[duplicateIndex] = 0;
+		}
+	}
+	return  templateCopy;
+}
+
+//Findet die Duplikaten anhand der Wünsche heraus
+var checkduplicates = function(peoplesWishesN){
+	var duplicates = [];
+	for(var i = 0;i < peoplesWishesN.length;i++){
+		if(peoplesWishesN[i] === null){
+			continue;
+		}
+		var temporalArray = [];
+		for(var j = 1 + i;j < peoplesWishesN.length;j++){
+			if(peoplesWishesN[i] === peoplesWishesN[j]){
+				temporalArray.push(j);
+				
+			}
+			
+		}
+		if(temporalArray.length > 0){
+			temporalArray.unshift(i);
+			var found = false;
+			for(var j =0;j < duplicates.length;j++){
+				if(duplicates[j].wish === peoplesWishesN[i]){
+					found = true;
+					break;
+				}
+			}
+			if(!found){
+				duplicates.push(new Duplicate(peoplesWishesN[i],temporalArray));
+			}
+		}
+	}
+	return duplicates;
+}
+
+//Baut Tabelle von allen Möglichen varianten
+var  getAllPossibilitesList = function(duplicates,template,possiblitiesList){
+	if(duplicates.length === 0){
+		possiblitiesList.push(template);
+		return;
+	}
+	var dupe = duplicates[0];
+	var duplicatesCopy = duplicates.slice(0);
+
+	duplicatesCopy.shift();
+	for(var i =0;i < dupe.indexes.length;i++){
+		var templateCopy = template.slice(0);
+		templateCopy[dupe.indexes[i]] = dupe.wish;
+		getAllPossibilitesList(duplicatesCopy, templateCopy,possiblitiesList);
+	}
+	
+}
+
+
+//Füllt am Ende die 0 und null Werte mit nicht benutzten Wünschen   
+var fillZerosWithUnusedGifts = function(array){
+	var unusedGifts = [];
+	for(var i = 0;i < allNumbersOfPresents.length;i++){
+		unusedGifts[i] = i + 1;
+	}
+	for(var i =0;i < array.length;i++){
+		for(var k =0;k < unusedGifts.length;k++){
+			if(array[i] == unusedGifts[k]){
+				unusedGifts[k] = null;
+				break;
+			}
+		}
+	}
+	unusedGifts = unusedGifts.filter(Boolean);
+	for(var i =0;i < array.length;i++){
+		if(array[i] === 0 || array[i] === null){
+			array[i] = unusedGifts[0];
+			unusedGifts.shift();
+		}
+	}
+}
+
+var generateResultOutput = function(input){
+	var retval = "";
+	var counterOfFirst = 0;
+	var counterOfSecond = 0;
+	var counterOfThird = 0;
+	for(var i =0;i < input.length;i++){
+		if(input[i] === originalPeoplesWishes[0][i]){
+			counterOfFirst++;
+			retval += '<font color = "lime">';
+		}else if(input[i] === originalPeoplesWishes[1][i]){
+			counterOfSecond++;
+			retval += '<font color = "yellow">';
+		}else if(input[i] === originalPeoplesWishes[2][i]){
+			counterOfThird++;
+			retval += '<font color = "red">';
+		}else{
+			retval += '<font color = "black">';
+		}
+		retval += input[i];
+		retval += "<br>";
+	}
+	retval = '<font color = "lime">Anzahl von Ersten Wünschen ' + counterOfFirst 
+	+ '<br><font color = "yellow">Anzahl von Zweiten Wünschen ' + counterOfSecond 
+	+ '<br><font color = "red">Anzahl von Dritten Wünschen ' + counterOfThird + "<br>" + retval;
+	return retval;
+}
+
+/*===============================================================================================================
+  =============================================== Optimisationen ================================================
+  ===============================================================================================================*/
+
+//optimisiert die Fälle in denen ein Duplikat die zweiten und dritten wüsche null Werte hat  (null kommt bei anderen optimisationen vor)
+var optimizitionOfDuplicates = function(duplicates){
+	var optimized = false;
+	for(var i =0;i < duplicates.length;i++){
+		var indexOfBestcase = -1;
+		var duplicate = duplicates[i];
+		for (var j =0;j <duplicate.indexes.length;j++){
+			var checkindex = duplicate.indexes[j];
+			if(peoplesWishes[1][checkindex] === null && peoplesWishes[2][checkindex] === null){
+				indexOfBestcase = checkindex;
+				break;
+			}
+		}
+		if(indexOfBestcase > -1){
+			optimized = true;
+			for (var j =0;j <duplicate.indexes.length;j++){
+			var checkindex = duplicate.indexes[j];
+				if(indexOfBestcase !== checkindex){
+					if(peoplesWishes[1][checkindex] === null){
+						peoplesWishes[0][checkindex] = peoplesWishes[2][checkindex];
+					}else{
+						peoplesWishes[0][checkindex] = peoplesWishes[1][checkindex];
+						peoplesWishes[1][checkindex] = peoplesWishes[2][checkindex];
+					}
+					peoplesWishes[2][checkindex] = null;
+				
+				}
+			}
+		}
+	}
+	return optimized;
+}
+//Routine ersetzt Zweite und Dritte Wünsche zu null wenn sie in den vorherigen Wünschen vorgekommen sind
+var optimisationOfWishes = function(){
+	for(var i =0; i <peoplesWishes[0].length;i++){
+		for(var j =0;j <peoplesWishes[1].length;j++){
+			if(peoplesWishes[0][i] === peoplesWishes[1][j]){
+				peoplesWishes[1][j] = null;
+			}
+			if(peoplesWishes[0][i] === peoplesWishes[2][j]){
+				peoplesWishes[2][j] = null;
+			}
+		}
+	}
+	for(var i =0;i <peoplesWishes[1].length;i++){
+		for(var j =0;j <peoplesWishes[2].length;j++){
+			if(peoplesWishes[1][i] === peoplesWishes[2][j] && peoplesWishes[1][i] != null){
+				peoplesWishes[2][j] = null;
+			}
+		}
+	}
+}
+
+
+//optimisiert komplett Identischen Wünsche
+var optimisationOfFullIdenticalWishes = function(){
+	for(var i =0;i < peoplesWishes[0].length;i++){
+		var fullIdenticalWishes = [];
+		fullIdenticalWishes.push(i);
+		for(var j = i + 1;j < peoplesWishes[0].length;j++){
+			if(peoplesWishes[0][i] === peoplesWishes[0][j] && peoplesWishes[1][i] === peoplesWishes[1][j] && peoplesWishes[2][i] === peoplesWishes[2][j]){
+				fullIdenticalWishes.push(j);
+			}
+		
+		}
+		if(fullIdenticalWishes.length > 1){
+			peoplesWishes[1][fullIdenticalWishes[0]] = null;
+			peoplesWishes[2][fullIdenticalWishes[0]] = null;
+			peoplesWishes[0][fullIdenticalWishes[1]] = peoplesWishes[1][1];
+			peoplesWishes[1][fullIdenticalWishes[1]] = null;
+			peoplesWishes[2][fullIdenticalWishes[1]] = null;
+			if(fullIdenticalWishes.length > 2){
+				peoplesWishes[0][fullIdenticalWishes[2]] = peoplesWishes[2][i];
+				peoplesWishes[1][fullIdenticalWishes[2]] = null;
+				peoplesWishes[2][fullIdenticalWishes[2]] = null;
+				for(var j =3;j <fullIdenticalWishes.length;j++){
+					peoplesWishes[0][fullIdenticalWishes[j]] = null;
+					peoplesWishes[1][fullIdenticalWishes[j]] = null;
+					peoplesWishes[2][fullIdenticalWishes[j]] = null;
+				
+				}
+			}
+		}
+		
+	}
+}
+
+
+</script>
+</body>
+</html>
