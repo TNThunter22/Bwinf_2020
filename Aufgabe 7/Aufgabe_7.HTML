@@ -311,11 +311,11 @@ var generateResultOutput = function(input){
 			retval += '<font color = "black">';
 		}
 		retval += input[i];
-		retval += "<br>";
+		retval += "</font><br>";
 	}
-	retval = '<font color = "lime">Anzahl von Ersten Wünschen ' + counterOfFirst 
-	+ '<br><font color = "yellow">Anzahl von Zweiten Wünschen ' + counterOfSecond 
-	+ '<br><font color = "red">Anzahl von Dritten Wünschen ' + counterOfThird + "<br>" + retval;
+	retval = '<font color = "lime">Anzahl von Ersten Wünschen ' + counterOfFirst + "</font>"
+	+ '<br><font color = "yellow">Anzahl von Zweiten Wünschen ' + counterOfSecond + "</font>"
+	+ '<br><font color = "red">Anzahl von Dritten Wünschen ' + counterOfThird + "</font><br>" + retval;
 	return retval;
 }
 
