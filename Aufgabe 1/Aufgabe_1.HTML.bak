@@ -12,7 +12,7 @@
 header {
 text-align: center;
 }
-</style>	
+</style>
 <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
 <h2 id='header'>Wörterbuch Methode 1a</h2>
 <button  id='method_1a'>Passwort 1a generieren</button><a id='method_1a_password'> </a>
@@ -77,10 +77,11 @@ var changeableLetters = {
 
 var getRandomPassword1a = function (){
 	var resultPassword1a = "";
-	var wordArray = randomWordFromInternet();			//gets a 1000 random words
+	var wordArray = randomWordFromInternet();
+	console.log(wordArray[i])
 	for (var i = 0;i < wordArray.length;i++){
-		resultPassword1a += changeWord(wordArray[i]); 	// adds the passwords
-		if (resultPassword1a.length >= 8){ 				//check if Password is too long
+		resultPassword1a += changeWord(wordArray[i]);
+		if (resultPassword1a.length >= 8){
 			break;
 		}
 	}
@@ -89,18 +90,19 @@ var getRandomPassword1a = function (){
 
 
 var changeWord = function (WordFromInternet){
-	var changedWord = "";
+	var changedWord = ""
 	for (i = 0;i < WordFromInternet.length ;i++){
-		var letter = WordFromInternet.charAt(i); 		//sets letter to letter from random word
-		var changedLetter = changeableLetters[letter]; 	//check if letter is a letter from changeableletters and return changedletter
-		if (changedLetter !== undefined){ 				// check if letter can be changed
-			if (Math.round(Math.random()) > 0){			// does math.random for 50% chance to change letter to changedLetter
+	console.log(WordFromInternet)
+		var letter = WordFromInternet.charAt(i);
+		var changedLetter = changeableLetters[letter];
+		if (changedLetter !== undefined){
+			if (Math.round(Math.random()) > 0){
 				changedWord += letter
 			}else{
 				changedWord += changeableLetters[letter];
 			}
 		}else{
-			changedWord += letter;						//adds the Letter if letter cannot be changed
+			changedWord += letter;
 		}
 	}
 	return changedWord;
@@ -108,14 +110,14 @@ var changeWord = function (WordFromInternet){
 
 
 var randomWordFromInternet = function (){
-	var wordArray = "";
+	var wordArray = ""
 	var r = new XMLHttpRequest();
-	r.open('GET', 'https://random-word-api.herokuapp.com/word?number=1000', false ); //gets list of 1000 random words
+	r.open('GET', 'https://random-word-api.herokuapp.com/word?number=1000', false );
 	r.send(null);
 	if (r.status === 200) {
 		wordArray = JSON.parse(r.responseText);
 	}
-	return wordArray; //sends the 1000 words back
+	return wordArray;
 }
 
 /* ===============================================================================================
